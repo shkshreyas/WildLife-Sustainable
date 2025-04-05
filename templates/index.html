@@ -1,102 +1,674 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wildlife Classifier</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Wildlife Classifier | AI Vision</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        body { padding: 20px; background-color: #f8f9fa; }
-        .container { max-width: 800px; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .result-container { margin-top: 20px; }
-        #preview { max-width: 300px; margin-top: 10px; border-radius: 5px; }
-        .prediction { font-weight: bold; font-size: 24px; color: #28a745; }
-        .confidence { margin-bottom: 20px; }
-        .top5-container { margin-top: 20px; }
-        .header { border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
-        .footer { margin-top: 30px; text-align: center; font-size: 0.9em; color: #6c757d; }
+        :root {
+            --primary: #6d28d9;
+            --primary-light: #8b5cf6;
+            --secondary: #10b981;
+            --dark: #111827;
+            --light: #f3f4f6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --card-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            --glass-effect: blur(10px);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #111827, #1f2937);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(109, 40, 217, 0.2), transparent 30%),
+                radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.2), transparent 30%);
+            z-index: -1;
+        }
+        
+        .animated-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -2;
+            overflow: hidden;
+        }
+        
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.2;
+            animation: float 15s infinite ease-in-out;
+        }
+        
+        .orb:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            background: var(--primary);
+            top: 10%;
+            left: -5%;
+            animation-delay: 0s;
+        }
+        
+        .orb:nth-child(2) {
+            width: 250px;
+            height: 250px;
+            background: var(--secondary);
+            bottom: -10%;
+            right: 5%;
+            animation-delay: -5s;
+        }
+        
+        .orb:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background: var(--primary-light);
+            bottom: 30%;
+            left: 20%;
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+            }
+            25% {
+                transform: translateY(-30px) translateX(20px);
+            }
+            50% {
+                transform: translateY(10px) translateX(-20px);
+            }
+            75% {
+                transform: translateY(20px) translateX(10px);
+            }
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .glassmorphism {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-effect);
+            -webkit-backdrop-filter: var(--glass-effect);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .glassmorphism:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 300;
+        }
+        
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .drop-zone {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .drop-zone:hover {
+            border-color: var(--primary-light);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .drop-zone.active {
+            border-color: var(--secondary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .drop-zone-prompt {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .drop-zone-icon {
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone:hover .drop-zone-icon {
+            color: var(--primary-light);
+            transform: scale(1.1);
+        }
+        
+        .drop-zone-input {
+            display: none;
+        }
+        
+        .button {
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(109, 40, 217, 0.3);
+            min-width: 150px;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(109, 40, 217, 0.4);
+            background: linear-gradient(to right, var(--primary-light), var(--primary));
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .button:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        #preview-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        #preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            object-fit: contain;
+        }
+        
+        #preview.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .loading-animation {
+            display: none;
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .loading-animation.visible {
+            display: flex;
+        }
+        
+        .loading-animation span {
+            display: block;
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-section {
+            margin-top: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .result-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 1000px;
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .result-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(to right, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .prediction-card {
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .prediction-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .prediction {
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .prediction span {
+            background: linear-gradient(to right, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .confidence {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .confidence-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .confidence-level {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            border-radius: 5px;
+            transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .top5-container {
+            margin-top: 1.5rem;
+        }
+        
+        .top5-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .top5-list {
+            list-style: none;
+            display: grid;
+            gap: 0.75rem;
+        }
+        
+        .top5-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            transform: translateX(-10px);
+            opacity: 0;
+            animation: slideIn 0.5s forwards;
+        }
+        
+        .top5-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateX(0);
+        }
+        
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .top5-item:nth-child(1) { animation-delay: 0.1s; }
+        .top5-item:nth-child(2) { animation-delay: 0.2s; }
+        .top5-item:nth-child(3) { animation-delay: 0.3s; }
+        .top5-item:nth-child(4) { animation-delay: 0.4s; }
+        .top5-item:nth-child(5) { animation-delay: 0.5s; }
+        
+        .class-name {
+            font-weight: 400;
+        }
+        
+        .probability {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        
+        .alert.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .alert-warning {
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 3px solid #f59e0b;
+            color: #fbbf24;
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
+            color: #f87171;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .drop-zone {
+                height: 150px;
+            }
+            
+            .prediction {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="animated-background">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+    
     <div class="container">
-        <div class="header">
-            <h1 class="mb-2">Wildlife Classifier</h1>
-            <p class="text-muted">Upload an image of an animal to classify it using deep learning</p>
-        </div>
-        
-        {% if not model_available %}
-        <div class="alert alert-warning">
-            <h4>Model Not Found</h4>
-            <p>The trained model file was not found. Please follow the instructions in the <a href="/export_guide">export guide</a> to train and export your model first.</p>
-        </div>
-        {% endif %}
-        
-        <form id="upload-form" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label for="formFile" class="form-label">Select an image of an animal:</label>
-                <input class="form-control" type="file" id="formFile" accept="image/*" onchange="previewImage()">
+        <div class="glassmorphism animate__animated animate__fadeIn">
+            <div class="header">
+                <h1>Wildlife Classifier</h1>
+                <p class="subtitle">Advanced AI vision detection of wildlife species</p>
             </div>
-            <button type="submit" class="btn btn-primary" {% if not model_available %}disabled{% endif %}>Classify</button>
             
-        </form>
-        
-        <div class="mt-3">
-            <img id="preview" class="img-thumbnail" style="display: none;">
-        </div>
-        
-        <div id="result" class="result-container" style="display: none;">
-            <h3>Results:</h3>
-            <div class="prediction">Prediction: <span id="prediction-text"></span></div>
-            <div class="confidence">Confidence: <span id="confidence-text"></span>%</div>
+            {% if not model_available %}
+            <div class="alert alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <div>
+                    <strong>Model Not Found</strong>
+                    <p>The trained model file was not found. Please follow the instructions in the <a href="/export_guide" style="color: inherit; text-decoration: underline;">export guide</a> to train and export your model first.</p>
+                </div>
+            </div>
+            {% endif %}
             
-            <div class="top5-container">
-                <h4>Top 5 Predictions:</h4>
-                <ul id="top5-list" class="list-group"></ul>
+            <div class="upload-section animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-zone-prompt">
+                        <div class="drop-zone-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        </div>
+                        <p>Drag & drop your wildlife image</p>
+                        <span style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.5);">or click to browse</span>
+                    </div>
+                    <input type="file" name="file" class="drop-zone-input" id="fileInput" accept="image/*">
+                </div>
+                
+                <button id="classifyBtn" class="button" {% if not model_available %}disabled{% endif %}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v10M3 21h4a2 2 0 0 0 2-2v-4m0 6h10a2 2 0 0 0 2-2V5"></path></svg>
+                    Classify
+                </button>
+            </div>
+            
+            <div id="preview-container" class="animate__animated animate__fadeIn" style="display: none;">
+                <img id="preview" alt="Preview">
+                <div class="loading-animation" id="loading-animation">
+                    <span></span>
+                </div>
+            </div>
+            
+            <div id="error" class="alert alert-error" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                <span id="error-message"></span>
+            </div>
+            
+            <div id="result" class="result-section">
+                <div class="result-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#8b5cf6" />
+                                <stop offset="100%" stop-color="#10b981" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <h3 class="result-title">Analysis Complete</h3>
+                </div>
+                
+                <div class="prediction-card animate__animated animate__fadeInUp">
+                    <div class="prediction">Detected: <span id="prediction-text"></span></div>
+                    <div class="confidence">Confidence Score: <span id="confidence-text"></span>%</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-level" id="confidence-level"></div>
+                    </div>
+                </div>
+                
+                <div class="top5-container">
+                    <h4 class="top5-header">Top 5 Predictions</h4>
+                    <ul id="top5-list" class="top5-list"></ul>
+                </div>
             </div>
         </div>
         
-        <div id="error" class="alert alert-danger mt-3" style="display: none;"></div>
-        
-        <div class="footer">
-            <p>This application uses a deep learning model trained on the Animals-10 dataset.</p>
-            <p>Created using PyTorch and Flask.</p>
+        <div class="footer animate__animated animate__fadeIn" style="animation-delay: 0.5s;">
+            <p>Powered by advanced deep learning techniques • PyTorch AI Vision</p>
+            <p style="margin-top: 0.5rem;"><a href="/api" style="color: var(--primary-light); text-decoration: none; transition: all 0.3s ease;">API Documentation</a> for developers</p>
         </div>
     </div>
     
     <script>
-        function previewImage() {
-            const preview = document.getElementById('preview');
-            const file = document.getElementById('formFile').files[0];
-            const reader = new FileReader();
+        // Elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const previewContainer = document.getElementById('preview-container');
+        const classifyBtn = document.getElementById('classifyBtn');
+        const loadingAnimation = document.getElementById('loading-animation');
+        const resultSection = document.getElementById('result');
+        const errorAlert = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+        
+        // Drag and drop functionality
+        ['dragover', 'dragenter'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => {
+                e.preventDefault();
+                dropZone.classList.add('active');
+            });
+        });
+        
+        ['dragleave', 'dragend'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => {
+                dropZone.classList.remove('active');
+            });
+        });
+        
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
             
-            reader.onloadend = function() {
-                preview.src = reader.result;
-                preview.style.display = 'block';
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updatePreview();
             }
+        });
+        
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', () => {
+            updatePreview();
+        });
+        
+        function updatePreview() {
+            const file = fileInput.files[0];
             
             if (file) {
+                const reader = new FileReader();
+                
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'flex';
+                    
+                    // Use setTimeout to ensure the DOM has been updated
+                    setTimeout(() => {
+                        preview.classList.add('visible');
+                    }, 10);
+                };
+                
                 reader.readAsDataURL(file);
-            } else {
-                preview.style.display = 'none';
             }
         }
         
-        document.getElementById('upload-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData();
-            const fileInput = document.getElementById('formFile');
-            
+        // Form submission
+        classifyBtn.addEventListener('click', () => {
             if (fileInput.files.length === 0) {
-                document.getElementById('error').textContent = 'Please select an image first.';
-                document.getElementById('error').style.display = 'block';
+                showError('Please select an image first.');
                 return;
             }
             
+            const formData = new FormData();
             formData.append('file', fileInput.files[0]);
             
             // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Classifying...';
-            submitBtn.disabled = true;
+            classifyBtn.disabled = true;
+            loadingAnimation.classList.add('visible');
+            resultSection.classList.remove('visible');
+            errorAlert.style.display = 'none';
             
             fetch('/predict', {
                 method: 'POST',
@@ -104,31 +676,37 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Reset button
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
+                // Hide loading state
+                classifyBtn.disabled = false;
+                loadingAnimation.classList.remove('visible');
                 
                 if (data.error) {
-                    document.getElementById('error').textContent = data.error;
-                    document.getElementById('error').style.display = 'block';
-                    document.getElementById('result').style.display = 'none';
+                    showError(data.error);
                 } else {
-                    document.getElementById('error').style.display = 'none';
                     document.getElementById('prediction-text').textContent = data.prediction;
                     document.getElementById('confidence-text').textContent = (data.confidence * 100).toFixed(2);
+                    
+                    // Animate confidence bar
+                    const confidenceBar = document.getElementById('confidence-level');
+                    confidenceBar.style.width = '0%';
+                    
+                    setTimeout(() => {
+                        confidenceBar.style.width = `${data.confidence * 100}%`;
+                    }, 10);
                     
                     const top5List = document.getElementById('top5-list');
                     top5List.innerHTML = '';
                     
                     data.top_5.forEach(item => {
                         const listItem = document.createElement('li');
-                        listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        listItem.className = 'top5-item';
                         
                         const className = document.createElement('span');
+                        className.className = 'class-name';
                         className.textContent = item.class;
                         
                         const probability = document.createElement('span');
-                        probability.className = 'badge bg-primary rounded-pill';
+                        probability.className = 'probability';
                         probability.textContent = `${(item.probability * 100).toFixed(2)}%`;
                         
                         listItem.appendChild(className);
@@ -136,20 +714,26 @@
                         top5List.appendChild(listItem);
                     });
                     
-                    document.getElementById('result').style.display = 'block';
+                    // Show results
+                    resultSection.classList.add('visible');
                 }
             })
             .catch(error => {
-                // Reset button
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
+                // Hide loading state
+                classifyBtn.disabled = false;
+                loadingAnimation.classList.remove('visible');
                 
-                document.getElementById('error').textContent = 'An error occurred during prediction.';
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('result').style.display = 'none';
+                showError('An error occurred during prediction.');
                 console.error('Error:', error);
             });
         });
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorAlert.style.display = 'flex';
+            errorAlert.classList.add('visible');
+            resultSection.classList.remove('visible');
+        }
     </script>
 </body>
 </html>
